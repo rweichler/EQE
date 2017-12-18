@@ -79,4 +79,4 @@ If people start contributing to (or the community substantially benefits from) t
 
 # Pull requests
 
-I don't know if I'll accept pull requests. This is mostly just a mirror. Better to ask / post code on [the Discord chat](https://discord.gg/ZPpkaG5) or on [the forum](https://eqe.fm/forum) first.
+I don't know if I'll accept pull requests. This is mostly just a mirror. Better to ask / post code on [the Discord chat](https://discordapp.com/invite/RSJWAuX) or on [the forum](https://eqe.fm/forum) first.
