@@ -9,6 +9,17 @@ local update_version_path = LUA_PATH..'/../../db/update_dl_version.lua'
 local update_dl_path = LUA_PATH..'/../../db/update.deb'
 local current_version = require 'config.default.version'
 
+
+local should_alert_update_path = '/var/tweak/com.r333d.eqe/db/should_alert_update.lua'
+local success, result = pcall(dofile, should_alert_update_path)
+SHOULD_ALERT_UPDATE = (not success or result) and true or false
+local function set_should_alert_update(on)
+    SHOULD_ALERT_UPDATE = on
+    local f = io.open(should_alert_update_path, 'w')
+    f:write('return '..tostring(on))
+    f:close()
+end
+
 -- this is for redundancy, in case eqe.fm ever does
 -- down we can have fallbacks
 local check_urls = {
@@ -76,7 +87,66 @@ function page:init()
     self.check_button:setFont('HelveticaNeue', 16)
     self.check_button.m:layer():setCornerRadius(8)
     self.check_button:setColor(COLOR(0xff, 0xff, 0xff, 0xff*0.7))
-    self.check_button.m:setBackgroundColor(COLOR(0xff, 0xff, 0xff, 0xff*0.03))
+    self.check_button.m:setBackgroundColor(COLOR(0xff, 0xff, 0xff, 0xff*0.07))
+
+    local alert_me_label = objc.UILabel:alloc():init()
+    alert_me_label:setColor(COLOR(0xffffffaa))
+    alert_me_label:setFont(objc.UIFont:fontWithName_size('HelveticaNeue', 14))
+    alert_me_label:setText('Alert me when an update is available')
+    alert_me_label:setNumberOfLines(0)
+    scroll.m:addSubview(alert_me_label)
+
+    alert_me_switch = objc.UISwitch:alloc():init()
+    alert_me_switch:setOnTintColor(COLOR(0x4bc2ffaa))
+    alert_me_switch:setTintColor(COLOR(0xffffff55))
+    alert_me_switch:setOn(SHOULD_ALERT_UPDATE)
+    scroll.m:addSubview(alert_me_switch)
+
+    local target = ns.target:new()
+    alert_me_switch:addTarget_action_forControlEvents(target.m, target.sel, UIControlEventValueChanged)
+    function target.onaction()
+        set_should_alert_update(alert_me_switch:isOn())
+    end
+
+    local cydia_notice = objc.UILabel:alloc():init()
+    cydia_notice:setColor(COLOR(0xffffff5d))
+    cydia_notice:setFont(objc.UIFont:fontWithName_size('HelveticaNeue', 11))
+    cydia_notice:setText("If you want, you can just update through Cydia. Both methods are compatible with each other.")
+    cydia_notice:setNumberOfLines(0)
+    cydia_notice:setTextAlignment(NSTextAlignmentCenter)
+    cydia_notice:setHidden(true)
+    scroll.m:addSubview(cydia_notice)
+
+    local footer_bottom
+    local function footer_set_y(y)
+        local pad = 22
+        y = y + self.check_button.m:frame().origin.y + self.check_button.m:frame().size.height + 64
+        alert_me_label:setFrame{{pad, y},{(FW - pad)/2, 0}}
+        alert_me_label:sizeToFit()
+        local f = alert_me_label:frame()
+        f.origin.x = FW/2 - f.size.width
+        alert_me_label:setFrame(f)
+
+        local s = alert_me_switch:frame().size
+        local box = {width = (FW - pad)/2, height = alert_me_label:frame().size.height}
+
+        alert_me_switch:setFrame{{FW/2 + (box.width - s.width)/2, y + (box.height - s.height)/2},s}
+
+        local bottom = alert_me_label:frame().origin.y + alert_me_label:frame().size.height
+
+        cydia_notice:setFrame{{pad, bottom + pad},{FW - pad*2, 0}}
+        cydia_notice:sizeToFit()
+        if cydia_notice:isHidden() then
+            footer_bottom = bottom + pad
+        else
+            footer_bottom = cydia_notice:frame().origin.y + cydia_notice:frame().size.height + pad
+        end
+        scroll.m:setContentSize{scroll.m:contentSize().width, footer_bottom}
+
+    end
+    footer_set_y(0)
+
+
     local check, download, prompt_update, update, prompt_cydia
     local update_version, download_url, download_sha256
     function check()
@@ -92,6 +162,8 @@ function page:init()
                 activity:setHidden(true)
                 message:setText(err)
                 self.check_button:setTitle('Check again')
+                cydia_notice:setHidden(true)
+                footer_set_y(0)
                 return
             end
             update_version = json.version
@@ -99,8 +171,10 @@ function page:init()
             download_sha256 = json.sha256 -- TODO actually check this lol
 
             if json.cydia then
+                cydia_notice:setHidden(true)
                 prompt_cydia()
             else
+                cydia_notice:setHidden(false)
                 local success, already_dled = pcall(dofile, update_version_path)
                 if success and already_dled == json.version then
                     prompt_update()
@@ -135,18 +209,18 @@ function page:init()
                 changelog:setText(s)
                 changelog:setFrame{{pad, f.origin.y + f.size.height + pad},{FW - pad*2, 0}}
                 changelog:sizeToFit()
-                scroll.m:setContentSize{scroll.m:contentSize().width, changelog:frame().origin.y + changelog:frame().size.height + pad}
+                footer_set_y(changelog:frame().size.height)
             elseif type(json.changelog) == 'string' then
                 local r = md.new(FW - pad*2)
                 changelog = r.m
                 changelog:setFrame{{pad, f.origin.y + f.size.height + pad},{0,0}}
                 scroll.m:addSubview(changelog)
                 function r.onupdate()
-                    scroll.m:setContentSize{scroll.m:contentSize().width, changelog:frame().origin.y + changelog:frame().size.height + pad}
+                    footer_set_y(changelog:frame().size.height)
                 end
                 r:init(json.changelog)
             else
-                scroll.m:setContentSize{scroll.m:contentSize().width, f.origin.y + f.size.height + pad}
+                footer_set_y(0)
             end
         end)
     end
@@ -157,7 +231,7 @@ function page:init()
         end
         activity:stopAnimating()
         activity:setHidden(true)
-        message:setText("An update is available. But I can't do it here. Has to be done in Cydia this time, sry :(")
+        message:setText("An update is available. But it can't be done here. Has to be done in Cydia this time, sry :(")
         self.check_button:setTitle('Open Cydia')
     end
     function prompt_update()
@@ -243,7 +317,8 @@ function page:init()
             local f = changelog:frame()
             f.origin.y = console:frame().origin.y + console:frame().size.height
             changelog:setFrame(f)
-            scroll.m:setContentSize{scroll.m:contentSize().width, changelog:frame().origin.y + changelog:frame().size.height + pad}
+            footer_set_y(console:frame().size.height + f.size.height)
+            scroll.m:setContentSize{scroll.m:contentSize().width, footer_bottom}
         end
         scroll.m:addSubview(console)
         Cmd('dpkg -i '..update_dl_path, function(str, status)

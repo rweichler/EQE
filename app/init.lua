@@ -170,7 +170,7 @@ require 'ns.http'
 objc.class('AppDelegate', 'UIResponder')
 
 objc.addmethod(objc.AppDelegate, 'application:didFinishLaunchingWithOptions:', function(self, app, options)
-    local path = LUA_PATH..'/error.log'
+    local path = '/var/tweak/com.r333d.eqe/db/apperror.log'
     local f = io.open(path, 'r')
     if f then
         local s = f:read('*all')

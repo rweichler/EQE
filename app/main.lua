@@ -210,9 +210,18 @@ _G.ROOT_VC = window:rootViewController()
 window:makeKeyAndVisible()
 
 CHECK_UPDATE(function(json, err)
-    if err then return end
+    if err or not SHOULD_ALERT_UPDATE then return end
 
-    C.alert_display_c('An update is available! Woo! Open the "update" tab to install it.', 'k', nil, nil)
+    C.alert_display_c('An update is available!', 'Later', 'More info', function()
+        if not MAIN_NAV_BUTTON.active then
+            TOGGLE_NAV()
+            DISPATCH(0.2, function()
+                SWAP_PAGE(Page.update)
+            end)
+        else
+            SWAP_PAGE(Page.update)
+        end
+    end)
 end)
 
 require 'autorun_loader'('app')

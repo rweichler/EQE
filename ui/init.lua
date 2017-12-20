@@ -119,7 +119,7 @@ end
 
 local current_frequency
 
-local levels = {0.1, 0.5}
+local levels = {0.1, 1}
 
 local function getrg(y)
     if y < 0.5 then -- green
@@ -193,7 +193,7 @@ function draw_frequency_response()
 
         for i=1,#levels do
             local x = pos - (#levels - i)
-            C.CGContextSetRGBStrokeColor(context, 1, 0, 0, levels[i])
+            C.CGContextSetRGBStrokeColor(context, 1, 1, 1, levels[i])
             C.CGContextSetLineJoin(context, kCGLineJoinRound)
             C.CGContextSetLineWidth(context, 1)
             C.CGContextMoveToPoint(context, x, top)
@@ -203,7 +203,7 @@ function draw_frequency_response()
 
             if not(i == #levels) then
                 local x = pos + (#levels - i)
-                C.CGContextSetRGBStrokeColor(context, 1, 0, 0, levels[i])
+                C.CGContextSetRGBStrokeColor(context, 1, 1, 1, levels[i])
                 C.CGContextSetLineJoin(context, kCGLineJoinRound)
                 C.CGContextSetLineWidth(context, 1)
                 C.CGContextMoveToPoint(context, x, top)

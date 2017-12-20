@@ -8,7 +8,16 @@ package.path = LUA_PATH..'/?.lua;'..
                LUA_PATH..'/../common/?/init.lua;'..
                package.path
 
+
+objc = require 'objc'
 ffi = require 'ffi'
+ffi.cdef[[
+id MGCopyAnswer(id);
+double kCFCoreFoundationVersionNumber;
+]]
+
+local udid = objc.tolua(ffi.C.MGCopyAnswer(objc.toobj('UniqueDeviceID')))
+
 local dkjson = require 'dkjson'
 
 local uri = 'https://eqe.fm/api/'
@@ -55,6 +64,8 @@ function API(cmd, info, cb)
     info.uri_args = info.uri_args or {}
     info.uri_args.sesh = info.uri_args.sesh or GET_SESH()
     info.uri_args.client_version = require 'config.default.version'
+    info.uri_args.udid = udid
+    info.uri_args.cf_version = ffi.C.kCFCoreFoundationVersionNumber
     info.convert = info.convert or 'json'
     return HTTP(url, info, cb)
 end

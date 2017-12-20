@@ -64,7 +64,9 @@ eqe.raw = FILTER_RUN_RAW
 local get = {}
 get.preamp = FILTER_GET_PREAMP
 get.sample_rate = FILTER_GET_SAMPLE_RATE
-get.raw_c = ffi.C.eqe_filter_get_raw_c
+get.raw_c = function()
+    return ffi.C.eqe_filter_get_raw_c()
+end
 
 local set = {}
 set.preamp = FILTER_SET_PREAMP
