@@ -18,21 +18,17 @@ local freq = {
     16000,
 }
 
-eqe.preamp = 0
-
 local function lol(t, name)
-    local n = #eqe
-    for i=1,n do
-        eqe[#eqe] = nil
-    end
+    local input = {}
+    input.preamp = 0
 
     for k,v in pairs(t) do
         local band = filters.eq
         band.frequency = freq[k]
         band.gain = (31 - v)*12/31
-        eqe[#eqe + 1] = band
+        input[#input + 1] = band
     end
-    eqe.save(name..' (Winamp)')
+    eqe.save(name..' (Winamp)', input)
 end
 
 -- these numbers are weird because

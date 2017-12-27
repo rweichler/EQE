@@ -28,17 +28,19 @@ function bandlist()
 end
 local esc = require 'str_esc'
 
-function eqe.save(name)
+function eqe.save(name, input)
+    input = input or eqe
     name = name and string.gsub(name, '%/', '\\')
+
     local path = preset_file(name)
     local f = io.open(path, 'w')
     f:write('return {\n')
     f:write('    {\n')
     f:write('        name = "preamp",\n')
-    f:write('        gain = '..eqe.preamp..',\n')
+    f:write('        gain = '..input.preamp..',\n')
     f:write('    },\n')
-    for i=1,#eqe do
-        local filter = eqe[i]
+    for i=1,#input do
+        local filter = input[i]
         f:write('    {\n')
         f:write('        name = "'..filter.name..'",\n')
         f:write('        frequency = '..filter.frequency..',\n')
@@ -62,35 +64,41 @@ function eqe.load(name, target)
     setfenv(f, {}) -- prevent "heres my preset" OSHIT PWNED situations
     local t = f()
     -- clear all bands
-    local n = #target
-    for i=1,n do
-        target[#target] = nil
-    end
-    target.preamp = 0
-    for _,info in pairs(t) do
-        if info.name == 'preamp' then
-            target.preamp = info.gain
-        else
-            local filter = filters[info.name]
-            for k,v in pairs(info) do
-                filter[k] = v
+    if target == eqe then
+        local to_insert = {}
+        for _,info in pairs(t) do
+            if info.name == 'preamp' then
+                eqe.preamp = info.gain
+            else
+                local filter = filters[info.name]
+                for k,v in pairs(info) do
+                    filter[k] = v
+                end
+                table.insert(to_insert, filter)
             end
-            target[#target + 1] = filter
+        end
+        eqe.insert(nil, to_insert, true)
+        eqe.update()
+        if name then
+            eqe.save()
+        end
+    else
+        local n = #target
+        for i=1,n do
+            target[#target] = nil
+        end
+        target.preamp = 0
+        for _,info in pairs(t) do
+            if info.name == 'preamp' then
+                target.preamp = info.gain
+            else
+                local filter = filters[info.name]
+                for k,v in pairs(info) do
+                    filter[k] = v
+                end
+                target[#target + 1] = filter
+            end
         end
     end
-    if target == eqe then
-        eqe.update()
-    end
-    if name then
-        eqe.save()
-    end
     return target
-end
-
-function eqe.flatten()
-    local n = #eqe
-    for i=1,n do
-        eqe[#eqe] = nil
-    end
-    eqe.preamp = 0
 end

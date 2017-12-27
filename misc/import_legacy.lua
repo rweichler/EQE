@@ -34,16 +34,14 @@ end
 local prefs = objc.tolua(objc.NSDictionary:dictionaryWithContentsOfFile(path))
 
 for name,bands in pairs(prefs.PRESETS) do
-    local n = #eqe
-    for i=1,n do
-        eqe[#eqe] = nil
-    end
+    local input = {}
+    input.preamp = 0
 
     for i,f in pairs(freq) do
         local band = filters.eq
         band.frequency = f
         band.gain = bands[i]
-        eqe[#eqe + 1] = band
+        input[#input + 1] = band
     end
-    eqe.save(name..' (Imported)')
+    eqe.save(name..' (Imported)', input)
 end

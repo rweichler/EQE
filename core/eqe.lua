@@ -54,12 +54,16 @@ function eqe:reset()
     end
 end
 
+eqe.raw = FILTER_RUN_RAW
+eqe.insert = FILTER_INSERT
 function eqe.update(...)
     eqe:reset()
     return FILTER_UPDATE(...)
 end
-
-eqe.raw = FILTER_RUN_RAW
+function eqe.flatten(...)
+    eqe:reset()
+    return FILTER_FLATTEN(...)
+end
 
 local get = {}
 get.preamp = FILTER_GET_PREAMP
