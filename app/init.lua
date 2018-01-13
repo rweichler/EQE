@@ -14,15 +14,25 @@ C = ffi.C
 bit = require 'bit'
 objc = require 'objc'
 
+local str_esc = require 'str_esc'
 function LOG_IN(login)
     LOGIN = login
-    if login then
-        _G.sesh.write(login.session_id)
-        IPCD('UPDATE_SESH("'..login.session_id..'")')
-    else
-        _G.sesh.write(nil)
-        IPCD('UPDATE_SESH(nil)')
+
+    local session_id = login and login.session_id or nil
+    _G.sesh.write(session_id)
+    local function defer()
+        if not(LOGIN == login) then return end
+
+        local success, err = pcall(IPCD, 'UPDATE_SESH('..str_esc(session_id)..')')
+        if not success then
+            if err == "couldn't establish a connection" then
+                DISPATCH(1, defer)
+            else
+                error(err)
+            end
+        end
     end
+    defer()
 end
 
 _G.weakt = setmetatable({}, {__mode = 'v'})
@@ -63,7 +73,6 @@ C.objc_setUncaughtExceptionHandler(function(exception, context)
 end)
 
 function Cmd(cmd, f)
-    --local BIN_PATH = '/Applications/jjjj.app' -- TODO fix this shit
     C.pipeit('/usr/libexec/eqe_setuid /usr/bin/env '..cmd, f)
 end
 

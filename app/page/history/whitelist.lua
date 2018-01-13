@@ -53,6 +53,7 @@ return function(m)
                 m:accessoryView():setOn(IPCD('return SHOULD_I_SPIN(false)') == 'true')
                 self.is_local = false
             end
+            m:detailTextLabel():setText(nil)
         else
             self.is_local = nil
 

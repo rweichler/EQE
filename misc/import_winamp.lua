@@ -20,14 +20,18 @@ local freq = {
 
 local function lol(t, name)
     local input = {}
-    input.preamp = 0
+
+    local max = 0
 
     for k,v in pairs(t) do
         local band = filters.eq
+        band.Q = 2
         band.frequency = freq[k]
         band.gain = (31 - v)*12/31
+        max = math.max(band.gain, max)
         input[#input + 1] = band
     end
+    input.preamp = -max
     eqe.save(name..' (Winamp)', input)
 end
 

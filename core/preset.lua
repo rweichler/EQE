@@ -4,27 +4,29 @@ function preset_file(name)
     return PRESET_FOLDER..'/'..name..'.lua'
 end
 
-local function list(folder, ignore)
+local function list(folder, ignore, should_return_table)
     local t = ls(folder)
-    local s = ''
+    local r = should_return_table and {} or ''
     for k,v in pairs(t) do
         if not(v == ignore) and string.sub(v, #v - 3, #v) == '.lua' then
-            s = s..string.sub(v, 1, #v - 4)
+            v = string.sub(v, 1, #v - 4)
 
-            if next(t, k) then
-                s = s ..'\n'
+            if should_return_table then
+                table.insert(r, v)
+            else
+                r = r..v..'\n'
             end
         end
     end
-    return s
+    return r
 end
 
-function presetlist()
-    return list(PRESET_FOLDER, 'CURRENT_BANDS.lua')
+function presetlist(should_return_table)
+    return list(PRESET_FOLDER, 'CURRENT_BANDS.lua', should_return_table)
 end
 
-function bandlist()
-    return list(LUA_PATH..'/filter', 'base')
+function bandlist(should_return_table)
+    return list(LUA_PATH..'/filter', 'base', should_return_table)
 end
 local esc = require 'str_esc'
 
@@ -54,6 +56,10 @@ function eqe.save(name, input)
         f:write('    },\n')
     end
     f:write('}')
+    if not name and input == eqe and next(eqe.attr) then
+        f:write(', ')
+        f:write(esc(eqe.attr))
+    end
     f:close()
     DAEMON_IPC('UPDATE_PRESET('..esc(name or 'CURRENT_BANDS')..','..esc(path)..')')
 end
@@ -62,11 +68,11 @@ function eqe.load(name, target)
     target = target or eqe
     local f = loadfile(preset_file(name))
     setfenv(f, {}) -- prevent "heres my preset" OSHIT PWNED situations
-    local t = f()
+    local t, attr = f()
     -- clear all bands
     if target == eqe then
         local to_insert = {}
-        for _,info in pairs(t) do
+        for k,info in pairs(t) do
             if info.name == 'preamp' then
                 eqe.preamp = info.gain
             else
@@ -75,6 +81,11 @@ function eqe.load(name, target)
                     filter[k] = v
                 end
                 table.insert(to_insert, filter)
+            end
+        end
+        if attr then
+            for k,v in pairs(attr) do
+                eqe.attr[k] = v
             end
         end
         eqe.insert(nil, to_insert, true)

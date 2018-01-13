@@ -10,7 +10,7 @@ return function(nav, frame)
     local radius = 20
     userinfo.m = objc.UIView:alloc():initWithFrame{{pad, frame.size.height - height}, {width, height + radius}}
     userinfo.m:layer():setCornerRadius(radius)
-    userinfo.m:setBackgroundColor(COLOR(0xffffff16))
+    userinfo.m:setBackgroundColor(COLOR(0xffffff09))
 
     local button = ui.button:new()
     button:setTitle('Log in / Create account')

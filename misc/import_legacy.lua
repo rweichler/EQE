@@ -35,13 +35,17 @@ local prefs = objc.tolua(objc.NSDictionary:dictionaryWithContentsOfFile(path))
 
 for name,bands in pairs(prefs.PRESETS) do
     local input = {}
-    input.preamp = 0
+
+    local max = 0
 
     for i,f in pairs(freq) do
         local band = filters.eq
+        band.Q = 2
         band.frequency = f
         band.gain = bands[i]
+        max = math.max(max, band.gain)
         input[#input + 1] = band
     end
+    input.preamp = -max
     eqe.save(name..' (Imported)', input)
 end

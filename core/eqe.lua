@@ -78,6 +78,8 @@ set.raw_c = function(v)
     ffi.C.eqe_filter_set_raw_c(v)
 end
 
+eqe.attr = {}
+
 setmetatable(eqe, {
     __index = function(t, k)
         local f = get[k]

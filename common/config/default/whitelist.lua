@@ -19,6 +19,7 @@ return {
     ['com.amazon.mp3.AmazonCloudPlayer'] = true,
     ['com.spotify.client'] = true,
     ['com.ascellamobile.musicloudfree'] = true,
+    ['com.google.PlayMusic'] = true,
 
     -- apps that should be disabled by
     -- default are set to false

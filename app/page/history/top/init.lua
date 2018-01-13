@@ -1,12 +1,13 @@
 local history = require 'history'
 
 return function(query, render)
+    local tbl = ui.table:new()
     return function(m)
-        local tbl = ui.table:new()
         tbl.m:setFrame(m:view():bounds())
 
         local songs = history.db:exec(query)
 
+        tbl.songs = songs
         tbl.section = {#songs}
 
         local super = tbl.cell.mnew
@@ -35,8 +36,9 @@ return function(query, render)
                 icon = nil
             end
             m:imageView():setImage(icon)
-            m:textLabel():setText(render(song))
-            m:detailTextLabel():setText(song.count..' spins')
+            local text, detailText = render(song)
+            m:textLabel():setText(text)
+            m:detailTextLabel():setText(detailText or song.count..' spins')
 
             if icon then
                 local scale = 22
@@ -48,5 +50,5 @@ return function(query, render)
 
 
         m:view():addSubview(tbl.m)
-    end
+    end, tbl
 end

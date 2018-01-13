@@ -108,13 +108,19 @@ function page:init()
         set_should_alert_update(alert_me_switch:isOn())
     end
 
+    local cydia_notice_text = "If you want, you can just update through Cydia. Both methods are compatible with each other."
+    local version_info_text
+    if string.find(EQE_TWEAK_VERSION, '%~beta') then
+        version_info_text = 'Current version: '..EQE_TWEAK_VERSION..'\ngit commit: '..string.sub(require 'config.default.git_commit', 1, 6)..'\n\nIf you are reporting an issue, please specify the git commit as well.'
+    else
+        version_info_text = 'Current version: '..EQE_TWEAK_VERSION
+    end
+
     local cydia_notice = objc.UILabel:alloc():init()
     cydia_notice:setColor(COLOR(0xffffff5d))
     cydia_notice:setFont(objc.UIFont:fontWithName_size('HelveticaNeue', 11))
-    cydia_notice:setText("If you want, you can just update through Cydia. Both methods are compatible with each other.")
     cydia_notice:setNumberOfLines(0)
     cydia_notice:setTextAlignment(NSTextAlignmentCenter)
-    cydia_notice:setHidden(true)
     scroll.m:addSubview(cydia_notice)
 
     local footer_bottom
@@ -136,6 +142,7 @@ function page:init()
 
         cydia_notice:setFrame{{pad, bottom + pad},{FW - pad*2, 0}}
         cydia_notice:sizeToFit()
+        cydia_notice:setFrame{{pad, bottom + pad},{FW - pad*2, cydia_notice:frame().size.height}}
         if cydia_notice:isHidden() then
             footer_bottom = bottom + pad
         else
@@ -144,6 +151,16 @@ function page:init()
         scroll.m:setContentSize{scroll.m:contentSize().width, footer_bottom}
 
     end
+    local function show_cydia_notice(should_show)
+        local s
+        if should_show then
+            s = cydia_notice_text..'\n\n'..version_info_text
+        else
+            s = version_info_text
+        end
+        cydia_notice:setText(s)
+    end
+    show_cydia_notice(false)
     footer_set_y(0)
 
 
@@ -162,7 +179,7 @@ function page:init()
                 activity:setHidden(true)
                 message:setText(err)
                 self.check_button:setTitle('Check again')
-                cydia_notice:setHidden(true)
+                show_cydia_notice(false)
                 footer_set_y(0)
                 return
             end
@@ -171,10 +188,10 @@ function page:init()
             download_sha256 = json.sha256 -- TODO actually check this lol
 
             if json.cydia then
-                cydia_notice:setHidden(true)
+                show_cydia_notice(false)
                 prompt_cydia()
             else
-                cydia_notice:setHidden(false)
+                show_cydia_notice(true)
                 local success, already_dled = pcall(dofile, update_version_path)
                 if success and already_dled == json.version then
                     prompt_update()
@@ -325,7 +342,7 @@ function page:init()
             if str == ffi.NULL then
                 -- finished
                 if status == 0 then
-                    append(true, 'Installed! :D You will probably want to restart the app and mediaserverd.')
+                    append(true, 'Installed! :D You may want to respring and/or restart the app.')
                     self.check_button.m:setHidden(true)
                     activity:stopAnimating()
                     activity:setHidden(true)

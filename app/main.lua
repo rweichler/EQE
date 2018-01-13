@@ -57,14 +57,14 @@ local window = objc.UIWindow:alloc():initWithFrame(objc.UIScreen:mainScreen():bo
 window:setRootViewController(VIEWCONTROLLER(function(m)
     _G.MAIN_VIEW = m:view()
 
-    m:view():setBackgroundColor(COLOR(0x111111ff))
+    m:view():setBackgroundColor(objc.EQEMainView:themeColor())
     local self = objc.getref(m)
     local frame = m:view():bounds()
 
     local active
 
     local main = objc.UIView:alloc():initWithFrame(frame)
-    main:setBackgroundColor(objc.UIColor:colorWithWhite_alpha(0.15, 1))
+    main:setBackgroundColor(objc.EQEMainView:themeColor())
 
     CONTENT_FRAME = ffi.new('struct CGRect', {{0, NAV_HEIGHT + STATUS_BAR_HEIGHT}, {frame.size.width, frame.size.height - (NAV_HEIGHT + STATUS_BAR_HEIGHT)}})
 

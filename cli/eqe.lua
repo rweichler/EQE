@@ -31,13 +31,7 @@ function band:pretty_gain()
 end
 
 function presetlist_count()
-    local presetlist = ipc('return presetlist()')
-    local i = 0
-    local sep = '\n'
-    for preset in string.gmatch(presetlist, "([^"..sep.."]+)") do
-        i = i + 1
-    end
-    return i
+    return tonumber(ipc('return #presetlist(true)'))
 end
 
 function get_band(i)

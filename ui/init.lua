@@ -138,7 +138,7 @@ local function setcolor(context, y, scale)
 end
 
 local function draw_0(context)
-    C.CGContextSetRGBStrokeColor(context, 1, 1, 1, 0.1)
+    C.CGContextSetRGBStrokeColor(context, 1, 1, 1, 0.4)
     local max = 55
     local y = transy(0)
     for i=0,max do
