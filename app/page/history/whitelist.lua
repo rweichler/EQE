@@ -19,12 +19,13 @@ return function(m)
         local self = objc.getref(m)
         local target = ns.target:new()
         function target.onaction()
+            local on = objc.weirdbool(switch:isOn())
             if self.app then
-                local on = switch:isOn() and 1 or 0
+                on = on and 1 or 0
                 self.app.enabled = on
                 history.db:exec('UPDATE app SET enabled='..on..' WHERE id='..self.app.id)
             else
-                local on = switch:isOn() and 'true' or 'false'
+                on = on and 'true' or 'false'
                 if self.is_local then
                     IPCD('SET_SHOULD_I_SPIN(true, '..on..')')
                 else

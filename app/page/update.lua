@@ -105,7 +105,7 @@ function page:init()
     local target = ns.target:new()
     alert_me_switch:addTarget_action_forControlEvents(target.m, target.sel, UIControlEventValueChanged)
     function target.onaction()
-        set_should_alert_update(alert_me_switch:isOn())
+        set_should_alert_update(objc.weirdbool(alert_me_switch:isOn()))
     end
 
     local cydia_notice_text = "If you want, you can just update through Cydia. Both methods are compatible with each other."

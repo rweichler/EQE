@@ -2423,6 +2423,22 @@ objc.tolua = tolua
 objc.nptr  = nptr
 objc.ipairs = array_ipairs
 
+-- depending on the iOS version
+-- sometimes methods dont return actual booleans,
+-- specifically -[UISwitch isOn],
+-- so we gotta have this check wrap around
+-- some method calls
+function objc.weirdbool(v)
+    local type = type(v)
+    if type == 'boolean' then
+        return v
+    elseif type == 'number' or type == 'cdata' then
+        return not(v == 0)
+    else
+        error('unknown type!!')
+    end
+end
+
 --autoload
 local submodules = {
 	inspect = 'objc_inspect',   --inspection tools
