@@ -1,6 +1,10 @@
 -- if you're reading this code for the first time,
 -- look in window.lua
 
+if jit.arch == 'arm64' then
+    jit.off()
+end
+
 package.path = package.path..';'..LUA_PATH..'/?.lua;'..LUA_PATH..'/?/init.lua'
 require 'util'
 
