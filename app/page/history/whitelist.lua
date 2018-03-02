@@ -22,8 +22,8 @@ return function(m)
             local on = objc.weirdbool(switch:isOn())
             if self.app then
                 on = on and 1 or 0
-                self.app.enabled = on
                 history.db:exec('UPDATE app SET enabled='..on..' WHERE id='..self.app.id)
+                self.app.enabled = on
             else
                 on = on and 'true' or 'false'
                 if self.is_local then

@@ -1,50 +1,53 @@
 local ffi = require 'ffi'
--- Codes -----------------------------------------------------------------------
-local sqlconstants = {} -- SQLITE_* and OPEN_* declarations.
+
 local codes = {
-  [0] = "OK", "ERROR", "INTERNAL", "PERM", "ABORT", "BUSY", "LOCKED", "NOMEM", 
-  "READONLY", "INTERRUPT", "IOERR", "CORRUPT", "NOTFOUND", "FULL", "CANTOPEN", 
-  "PROTOCOL", "EMPTY", "SCHEMA", "TOOBIG", "CONSTRAINT", "MISMATCH", "MISUSE", 
-  "NOLFS", "AUTH", "FORMAT", "RANGE", "NOTADB", [100] = "ROW", [101] = "DONE"
-} -- From 0 to 26.
+  [0] = 'OK', 'ERROR', 'INTERNAL', 'PERM', 'ABORT', 'BUSY', 'LOCKED', 'NOMEM',
+  'READONLY', 'INTERRUPT', 'IOERR', 'CORRUPT', 'NOTFOUND', 'FULL', 'CANTOPEN',
+  'PROTOCOL', 'EMPTY', 'SCHEMA', 'TOOBIG', 'CONSTRAINT', 'MISMATCH', 'MISUSE',
+  'NOLFS', 'AUTH', 'FORMAT', 'RANGE', 'NOTADB',
+  [100] = 'ROW', [101] = 'DONE',
+}
+local flags = {
+    INTEGER              = 1,
+    FLOAT                = 2,
+    TEXT                 = 3,
+    BLOB                 = 4,
+    NULL                 = 5,
 
-do
-  local types = { "INTEGER", "FLOAT", "TEXT", "BLOB", "NULL" } -- From 1 to 5.
+    OPEN_READONLY        = 0x00000002,
+    OPEN_READWRITE       = 0x00000002,
+    OPEN_CREATE          = 0x00000004,
+    OPEN_DELETEONCLOSE   = 0x00000008,
+    OPEN_EXCLUSIVE       = 0x00000010,
+    OPEN_AUTOPROXY       = 0x00000020,
+    OPEN_URI             = 0x00000040,
+    OPEN_MAIN_DB         = 0x00000100,
+    OPEN_TEMP_DB         = 0x00000200,
+    OPEN_TRANSIENT_DB    = 0x00000400,
+    OPEN_MAIN_JOURNAL    = 0x00000800,
+    OPEN_TEMP_JOURNAL    = 0x00001000,
+    OPEN_SUBJOURNAL      = 0x00002000,
+    OPEN_MASTER_JOURNAL  = 0x00004000,
+    OPEN_NOMUTEX         = 0x00008000,
+    OPEN_FULLMUTEX       = 0x00010000,
+    OPEN_SHAREDCACHE     = 0x00020000,
+    OPEN_PRIVATECACHE    = 0x00040000,
+    OPEN_WAL             = 0x00080000,
 
-  local opens = {
-    READONLY =        0x00000001;
-    READWRITE =       0x00000002;
-    CREATE =          0x00000004;
-    DELETEONCLOSE =   0x00000008;
-    EXCLUSIVE =       0x00000010;
-    AUTOPROXY =       0x00000020;
-    URI =             0x00000040;
-    MAIN_DB =         0x00000100;
-    TEMP_DB =         0x00000200;
-    TRANSIENT_DB =    0x00000400;
-    MAIN_JOURNAL =    0x00000800;
-    TEMP_JOURNAL =    0x00001000;
-    SUBJOURNAL =      0x00002000;
-    MASTER_JOURNAL =  0x00004000;
-    NOMUTEX =         0x00008000;
-    FULLMUTEX =       0x00010000;
-    SHAREDCACHE =     0x00020000;
-    PRIVATECACHE =    0x00040000;
-    WAL =             0x00080000;
-  }
+    CHECKPOINT_PASSIVE   = 0,
+    CHECKPOINT_FULL      = 1,
+    CHECKPOINT_RESTART   = 2,
+    CHECKPOINT_TRUNCATE  = 3,
+}
 
-  local t = sqlconstants
-  local pre = "static const int32_t SQLITE_"  
-  for i=0,26    do t[#t+1] = pre..codes[i].."="..i..";\n" end
-  for i=100,101 do t[#t+1] = pre..codes[i].."="..i..";\n" end  
-  for i=1,5     do t[#t+1] = pre..types[i].."="..i..";\n" end  
-  pre = pre.."OPEN_"
-  for k,v in pairs(opens) do t[#t+1] = pre..k.."="..bit.tobit(v)..";\n" end  
+local pre = 'static const int32_t SQLITE_'
+for k,v in pairs(codes) do
+    ffi.cdef(pre..v..'='..k..';')
+end
+for k,v in pairs(flags) do
+    ffi.cdef(pre..k..'='..bit.tobit(v)..';')
 end
 
--- Cdef ------------------------------------------------------------------------
--- SQLITE_*, OPEN_*
-ffi.cdef(table.concat(sqlconstants))
 ffi.cdef[[
 // Typedefs.
 typedef struct sqlite3 sqlite3;
@@ -60,6 +63,7 @@ const char *sqlite3_errmsg(sqlite3*);
 int sqlite3_open_v2(const char *filename, sqlite3 **ppDb, int flags,
   const char *zVfs);
 int sqlite3_close(sqlite3*);
+int sqlite3_close_v2(sqlite3*);
 int sqlite3_busy_timeout(sqlite3*, int ms);
 
 // Statement.
@@ -126,6 +130,9 @@ int sqlite3_create_function(
   void (*xStep)(sqlite3_context*,int,sqlite3_value**),
   void (*xFinal)(sqlite3_context*)
 );
+
+// WAL shit
+int sqlite3_wal_checkpoint_v2(sqlite3 *db, const char *zDb, int eMode, int *pnLog, int *pnCkpt);
 ]]
 local lib = ffi.load('sqlite3')
 local open_modes = {
@@ -135,6 +142,8 @@ local open_modes = {
 }
 
 local sql = {}
+sql.C = lib
+sql.codes = codes
 sql.mt = {
     __index = sql,
     __tostring = function(t)
@@ -172,10 +181,12 @@ function sql:close()
     self.conn = nil
 end
 
-function sql:check(code)
+function sql:check(code, try)
+    if try and code == lib.SQLITE_BUSY then return false end
     if not(code == lib.SQLITE_OK) then
-        error(ffi.string(lib.sqlite3_errmsg(self.conn)))
+        error(ffi.string(lib.sqlite3_errmsg(self.conn))..' ('..codes[code]..')')
     end
+    return true
 end
 
 function sql.esc(v)
@@ -186,7 +197,7 @@ function sql.esc(v)
     end
 end
 
-local function wrap(f)
+local function wrap(f, try)
     return function(self, query, should_cache)
         assert(self.conn)
 
@@ -196,17 +207,24 @@ local function wrap(f)
 
         local stmt = self.stmt_cache[query]
         if not stmt then
-            self:check(lib.sqlite3_prepare_v2(self.conn, query, #query, sql.ct.stmt, nil))
+            local code = lib.sqlite3_prepare_v2(self.conn, query, #query, sql.ct.stmt, nil)
+            if not self:check(code, try) then
+                return nil, code
+            end
             stmt = sql.ct.stmt[0]
         end
 
-        local result = f(self, stmt)
+        local r, code = f(self, stmt)
+        local errstr
+        if code and not(try and code == lib.SQLITE_BUSY) then
+            errstr = ffi.string(lib.sqlite3_errmsg(self.conn))
+        end
 
         if should_cache then
-            self:check(lib.sqlite3_reset(stmt))
+            lib.sqlite3_reset(stmt)
             self.stmt_cache[query] = stmt
         else
-            self:check(lib.sqlite3_finalize(stmt))
+            lib.sqlite3_finalize(stmt)
             self.stmt_cache[query] = nil
         end
 
@@ -214,7 +232,11 @@ local function wrap(f)
             self:unlock()
         end
 
-        return result
+        if errstr then
+            error(errstr..' ('..codes[code]..')')
+        end
+
+        return r, code
     end
 end
 
@@ -239,12 +261,13 @@ end
 eval[lib.SQLITE_NULL] = function(stmt, i)
     return nil
 end
-local function step(stmt)
+local function step(self, stmt)
     local code = lib.sqlite3_step(stmt)
     if code == lib.SQLITE_DONE then
         return nil
+    elseif not(code == lib.SQLITE_ROW) then
+        return nil, code
     end
-    assert(code == lib.SQLITE_ROW, codes[code])
     local row = {}
     for i=0,lib.sqlite3_column_count(stmt)-1 do
         local k = lib.sqlite3_column_name(stmt, i)
@@ -253,12 +276,14 @@ local function step(stmt)
     end
     return row
 end
-sql.exec = wrap(function(self, stmt)
+local function exec(self, stmt)
     local result = {}
     local i = 0
     while true do
-        local row = step(stmt)
-        if not row then
+        local row, code = step(self, stmt)
+        if code then
+            return nil, code
+        elseif not row then
             break
         end
         i = i + 1
@@ -266,36 +291,29 @@ sql.exec = wrap(function(self, stmt)
     end
 
     return result
+end
+
+sql.exec = wrap(exec)
+sql.try = wrap(exec, true)
+
+local function wrap1(f)
+    return wrap(function(self, stmt)
+        local code = lib.sqlite3_step(stmt)
+        if code == lib.SQLITE_DONE then
+            return nil
+        elseif code == lib.SQLITE_ROW then
+            return f(stmt, 0)
+        else
+            return nil, code
+        end
+    end)
+end
+
+sql.int = wrap1(lib.sqlite3_column_int)
+sql.float = wrap1(lib.sqlite3_column_double)
+sql.text = wrap1(function(stmt, i)
+    return ffi.string(lib.sqlite3_column_text(stmt, i))
 end)
-
-sql.int = wrap(function(self, stmt)
-    local code = lib.sqlite3_step(stmt)
-    if code == lib.SQLITE_DONE then
-        return nil
-    end
-    assert(code == lib.SQLITE_ROW)
-    return lib.sqlite3_column_int(stmt, 0)
-end)
-
-sql.float = wrap(function(self, stmt)
-    local code = lib.sqlite3_step(stmt)
-    if code == lib.SQLITE_DONE then
-        return nil
-    end
-    assert(code == lib.SQLITE_ROW)
-    return lib.sqlite3_column_double(stmt, 0)
-end)
-
-sql.text = wrap(function(self, stmt)
-    local code = lib.sqlite3_step(stmt)
-    if code == lib.SQLITE_DONE then
-        return nil
-    end
-    assert(code == lib.SQLITE_ROW)
-    return ffi.string(lib.sqlite3_column_text(stmt, 0))
-end)
-
-
 
 local flock
 function sql:lock()

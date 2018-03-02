@@ -9,6 +9,10 @@ int access(const char *path, int amode);
 int open(const char *path, int oflags, mode_t mode);
 int close(int fd);
 int chmod(const char *path, mode_t mode);
+
+typedef uint32_t uid_t;
+typedef uint32_t gid_t;
+int chown(const char *path, uid_t uid, gid_t gid);
 ]]
 local F_OK = 0
 local LOCK_EX = 2
@@ -27,6 +31,7 @@ function flock.new(path)
         end
         C.close(fd)
         C.chmod(path, tonumber(400, 8))
+        C.chown(path, 501, 501)
     end
     local fd = C.open(path, O_RDONLY, tonumber(666, 8))
     if fd == -1 then

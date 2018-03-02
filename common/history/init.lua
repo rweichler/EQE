@@ -1,5 +1,10 @@
 local sqlite = require 'sqlite'
 local legacy = require 'history.legacy'
+ffi.cdef[[
+typedef uint32_t uid_t;
+typedef uint32_t gid_t;
+int chown(const char *path, uid_t uid, gid_t gid);
+]]
 
 local history = {}
 
@@ -15,17 +20,25 @@ else
     log = function() end
 end
 
+function history.newsong(info)
+    return {
+        title = info.title,
+        artist = info.artist,
+        album = info.albumTitle,
+        app = info.app,
+        playback_rate = tonumber(info.MPNowPlayingInfoPropertyPlaybackRate),
+    }
+end
 
 
 local esc = sqlite.esc
 
 history.minimum_duration = 30 -- minimum amount of time for a song to count as a play
 history.db_path = '/var/tweak/com.r333d.eqe/db/history.db'
-function history.add(info)
-    local rate = tonumber(info.MPNowPlayingInfoPropertyPlaybackRate)
-    if not rate then return end
-    if not info.title then return end
-    local paused = rate == 0
+function history.add(song)
+    if not song.playback_rate then return end
+    if not song.title then return end
+    local paused = song.playback_rate == 0
 
     local nowplaying = history.nowplaying
     local function done()
@@ -40,22 +53,16 @@ function history.add(info)
     if paused then
         done()
     else -- play
-        local cur = {
-            title = info.title,
-            album = info.albumTitle,
-            artist = info.artist,
-            app = info.app,
-            timestamp = os.time(),
-        }
-        if not nowplaying or not(nowplaying.title == cur.title and nowplaying.album == cur.album and nowplaying.artist == cur.artist) then
+        song.timestamp = song.timestamp or os.time()
+        if not nowplaying or not(nowplaying.title == song.title and nowplaying.album == song.album and nowplaying.artist == song.artist) then
             done()
-            cur.total = 0
-            cur.start = os.time()
+            song.total = 0
+            song.start = os.time()
             local last = history.last()
-            cur.id = tonumber((last and last.id or 0) + 1)
-            local newapp = history.write(cur)
-            history.nowplaying = cur
-            return cur, newapp
+            song.id = tonumber((last and last.id or 0) + 1)
+            local newapp = history.write(song)
+            history.nowplaying = song
+            return true, newapp
         else
             nowplaying.start = nowplaying.start or os.time()
         end
@@ -77,6 +84,10 @@ function history.init()
         end
     end
     if firstrun then
+        local O_CREAT = 0x0200
+        local f = io.open(history.db_path, 'w')
+        f:close()
+        C.chown(history.db_path, 501, 501)
         history.db = sqlite.open(history.db_path)
         history.db.atomic = true
         for k,v in pairs(legacy.current) do
@@ -150,6 +161,8 @@ function history.delete(id)
 end
 
 function history.write(song)
+    if song.nowrite then return end
+
     if not song.wrote then
         song.wrote = true
         local appid, newapp = get_appid(song.app)

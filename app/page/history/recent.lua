@@ -12,7 +12,6 @@ end
 
 function tbl:editcell(section, row, style)
     if not(style == UITableViewCellEditingStyleDelete) then return end
-
     history.db:exec('UPDATE HISTORY SET deleted=1 WHERE id='..self.songs[row].id)
 
     table.remove(self.songs, row)

@@ -35,33 +35,36 @@ function eqe.save(name, input)
     name = name and string.gsub(name, '%/', '\\')
 
     local path = preset_file(name)
-    local f = io.open(path, 'w')
-    f:write('return {\n')
-    f:write('    {\n')
-    f:write('        name = "preamp",\n')
-    f:write('        gain = '..input.preamp..',\n')
-    f:write('    },\n')
+    local buf = {}
+    local function write(s)
+        buf[#buf + 1] = s
+    end
+    write('return {\n')
+    write('    {\n')
+    write('        name = "preamp",\n')
+    write('        gain = '..input.preamp..',\n')
+    write('    },\n')
     for i=1,#input do
         local filter = input[i]
-        f:write('    {\n')
-        f:write('        name = "'..filter.name..'",\n')
-        f:write('        frequency = '..filter.frequency..',\n')
-        f:write('        Q = '..filter.Q..',\n')
+        write('    {\n')
+        write('        name = "'..filter.name..'",\n')
+        write('        frequency = '..filter.frequency..',\n')
+        write('        Q = '..filter.Q..',\n')
         if filter.gain then
-            f:write('        gain = '..filter.gain..',\n')
+            write('        gain = '..filter.gain..',\n')
         end
         if filter.channel then
-            f:write('        channel = '..filter.channel..',\n')
+            write('        channel = '..filter.channel..',\n')
         end
-        f:write('    },\n')
+        write('    },\n')
     end
-    f:write('}')
+    write('}')
     if not name and input == eqe and next(eqe.attr) then
-        f:write(', ')
-        f:write(esc(eqe.attr))
+        write(', ')
+        write(esc(eqe.attr))
     end
-    f:close()
-    DAEMON_IPC('UPDATE_PRESET('..esc(name or 'CURRENT_BANDS')..','..esc(path)..')')
+    IPCD('WRITE_FILE('..esc(path)..','..esc(table.concat(buf))..')')
+    IPCD('UPDATE_PRESET('..esc(name or 'CURRENT_BANDS')..','..esc(path)..')')
 end
 
 function eqe.load(name, target)

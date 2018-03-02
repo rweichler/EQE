@@ -19,7 +19,7 @@ function LOG_IN(login)
     LOGIN = login
 
     local session_id = login and login.session_id or nil
-    _G.sesh.write(session_id)
+    _G.sesh.data = session_id
     local function defer()
         if not(LOGIN == login) then return end
 

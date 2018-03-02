@@ -14,6 +14,15 @@ require 'util'
 require 'preset'
 require 'eqe'
 
+function IPCD(s)
+    while true do
+        local success, result = pcall(DAEMON_IPC, s)
+        if success then
+            return result
+        end
+    end
+end
+
 -- load config, if its there
 local success = pcall(require, 'config')
 

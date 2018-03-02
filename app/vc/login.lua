@@ -98,7 +98,7 @@ return function(cb)
                         local has_logged_in_path = '/var/tweak/com.r333d.eqe/db/has_logged_in_once'
                         local f = io.open(has_logged_in_path, 'r')
                         if not f then
-                            C.alert_display_c('It appears this is the first time you have logged in to eqe.fm. Would you like to send your playback history there from now on, so other people can see it?\n\nTo change these settings, go to Playback history > App whitelist', 'No thanks', 'Sure', function()
+                            C.alert_display_c('It appears this is the first time you have logged in to eqe.fm. Would you like to send your playback history there from now on, so other people can see it?\n\nTo change these settings, go to Playback history > App whitelist', 'No', 'Sure', function()
                                 IPCD('SET_SHOULD_I_SPIN(false, true)')
                             end)
                             f = io.open(has_logged_in_path, 'w')

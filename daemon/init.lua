@@ -11,6 +11,7 @@ package.path = LUA_PATH..'/?.lua;'..
 
 objc = require 'objc'
 ffi = require 'ffi'
+C = ffi.C
 ffi.cdef[[
 id MGCopyAnswer(id);
 double kCFCoreFoundationVersionNumber;
@@ -45,6 +46,12 @@ function SHOULD_I_SPIN(is_local)
     else
         return should_spin_online
     end
+end
+
+function WRITE_FILE(path, contents)
+    local f = io.open(path, 'w')
+    f:write(contents)
+    f:close()
 end
 
 function SET_SHOULD_I_SPIN(is_local, v)
@@ -93,7 +100,7 @@ history.init()
 
 rsp_timeout = 0
 
-local function spin(song, timeout)
+local function send_to_server(song, timeout)
     API('spin', {
         uri_args = {
             title = song.title,
@@ -126,28 +133,58 @@ local function spin(song, timeout)
         end
     end)
 end
-function scrobble(songinfo)
-    if not should_spin_local then return end
 
-    local song, newapp = history.add(songinfo)
-    newapp = newapp and 'newapp' or nil
-    if not song then return newapp end
+spin = {}
+spin.filter = {}
+spin.filters = {}
+function spin.filter.add(k, f)
+    if not f then
+        f = k
+        k = #spin.filters + 1
+    end
+    assert(type(f) == 'function')
+    spin.filters[k] = f
+end
+function spin.filter.remove(k)
+    spin.filters[k] = nil
+end
+function spin.filter.check(song)
+    local online, offline = true, true
 
-    if song.appid then
-        local app = history.getapp(song.appid)
-        if app.enabled == 0 then
-            return newapp
+    for k,f in pairs(spin.filters) do
+        if f(song, true) == false then
+            online = false
+        end
+        if f(song, false) == false then
+            offline = false
         end
     end
 
-    if not should_spin_online then return newapp end
+    return online, offline
+end
+
+function scrobble(songinfo)
+    local song = history.newsong(songinfo)
+
+    local online, offline = spin.filter.check(song)
+
+    song.nowrite = not should_spin_local or not offline
+
+    local success, newapp = history.add(song)
+    newapp = newapp and 'newapp' or nil
+
+    if song.appid and history.getapp(song.appid).enabled == 0 then
+        return newapp
+    end
+
+    if not should_spin_online or not online then return newapp end
 
     DISPATCH(history.minimum_duration + 2, function()
         if (song.start and os.time() - song.start >= history.minimum_duration)
             or
             (song.total and song.total >= history.minimum_duration)
         then
-            spin(song)
+            send_to_server(song)
         end
     end)
 
