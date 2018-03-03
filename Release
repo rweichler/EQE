@@ -1,0 +1,8 @@
+Origin: EQE Beta Repo
+Label: EQE Beta Repo
+Suite: Stable
+Version: 0.1
+Codename: eqebeta
+Architectures: iphoneos-arm
+Components: main
+Description: YEAH BABY
