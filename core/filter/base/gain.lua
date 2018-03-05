@@ -1,8 +1,10 @@
 local super = require 'filter/base'
 local filter = super:new()
 
+
 function filter:new()
     local self = super.new(self)
+    getmetatable(self).__newindex = nil
     self.class.gain = true
     self.gain = 0
     return self

@@ -69,7 +69,13 @@ function HTTP(url, requestinfo, cb, progress_cb)
 end
 
 C.objc_setUncaughtExceptionHandler(function(exception, context)
-    error(objc.tolua(exception.reason))
+    local s = objc.tolua(exception.reason)
+    s = s..'\nobjc stack:'
+    local symbols = exception:callStackSymbols()
+    for i=0,tonumber(symbols:count())-1 do
+        s = s..'\n'..objc.tolua(symbols:objectAtIndex(i))
+    end
+    error(s)
 end)
 
 function Cmd(cmd, f)

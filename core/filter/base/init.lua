@@ -1,7 +1,14 @@
 local filter = {}
 
+local function newindex(t, k, v)
+    -- shitty hack
+    if not(k == 'gain') then
+        rawset(t, k, v)
+    end
+end
+
 function filter:new()
-    local self = setmetatable({}, {__index=self})
+    local self = setmetatable({}, {__index=self, __newindex=newindex})
     self.class = {}
     self.frequency = 0
     self.Q = 2
