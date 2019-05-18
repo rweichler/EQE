@@ -123,7 +123,8 @@ local function parse(md, last)
     if f then
         return f(md, last and md:next() == ffi.NULL)
     else
-        return rtf.new('<IDK>')
+        -- TODO implement quoting
+        return rtf.new('')
     end
 end
 

@@ -1,8 +1,3 @@
-ffi.cdef[[
-typedef void (*filter_function_t)(float **samples, int frames, int channel, float sampleRate);
-void eqe_filter_set_raw_c(filter_function_t f);
-filter_function_t eqe_filter_get_raw_c();
-]]
 local sort_mt = {
     __index = function(t, k)
         local s2r = {} -- sorted to raw index mapping
@@ -68,15 +63,9 @@ end
 local get = {}
 get.preamp = FILTER_GET_PREAMP
 get.sample_rate = FILTER_GET_SAMPLE_RATE
-get.raw_c = function()
-    return ffi.C.eqe_filter_get_raw_c()
-end
 
 local set = {}
 set.preamp = FILTER_SET_PREAMP
-set.raw_c = function(v)
-    ffi.C.eqe_filter_set_raw_c(v)
-end
 
 eqe.attr = {}
 

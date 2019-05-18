@@ -152,94 +152,12 @@ return function(forum, push, loadicon)
         function tbl.cell.onselect(_, section, row)
         end
 
+        local item
+
         function list_threads(cb)
             load_fail:start_load(m:view():frame().size)
             HTTP(BASE_URL..'/api/forum/view_forum?id='..forum.id, {convert = 'json'}, function(info, status, headers)
-                if info and status == 200 and not info.error then
-                    tbl.items[1] = info.threads
-                    function tbl.cell.onshow(_, m, section, row)
-                        if loading then return end
-                        local thread = tbl.items[section][row]
-                        --m:textLabel():setText(thread.title)
-                        --m:detailTextLabel():setText('By '..thread.author_username..', '..thread.num_replies..' replies')
-                        --m:imageView():setImage(thread.icon)
-
-                        local self = objc.getref(m)
-                        self.thread = thread
-
-                        self.title:setFrame(title_frame)
-                        self.title:setText(thread.title)
-                        self.title:sizeToFit()
-
-                        self.username:setFrame{{min_height, self.title:frame().origin.y + self.title:frame().size.height + mid},{0,0}}
-                        self.username:setText(thread.author_username)
-                        self.username:sizeToFit()
-
-                        self.avatar:setImage(thread.icon)
-
-                        local w = min_height - pad*2
-                        local h = min_height/2.5
-                        self.alienblue:setFrame{{m:frame().size.width - w - pad, (m:frame().size.height - h)/2}, {w, h}}
-
-                        self.replies:setText(thread.num_replies < 1000 and tostring(thread.num_replies) or string.format('%.1fk', math.floor(thread.num_replies/100)/10))
-                        self.replies:setFrame(self.alienblue:frame())
-
-                        self.time:setText(relative_time(os.time() - thread.last_post_date, true))
-                        self.time:sizeToFit()
-                        local frame = self.alienblue:frame()
-                        frame.origin.y = frame.origin.y - self.time:frame().size.height
-                        frame.size.height = self.time:frame().size.height
-                        self.time:setFrame(frame)
-
-                        local frame = self.avatar_button.m:frame()
-                        frame.size.height = m:frame().size.height
-                        self.avatar_button.m:setFrame(frame)
-                        self.avatar_button.parent = self
-
-                        local frame = self.mid_button.m:frame()
-                        frame.size.height = m:frame().size.height
-                        self.mid_button.m:setFrame(frame)
-                        self.mid_button.parent = self
-
-                        local frame = self.last_button.m:frame()
-                        frame.size.height = m:frame().size.height
-                        self.last_button.m:setFrame(frame)
-                        self.last_button.parent = self
-                    end
-                    function tbl.cell.getheight(_, section, row)
-                        local thread = tbl.items[section][row]
-                        if not heights[row] then
-                            local frame = height_label:frame()
-                            height_label:setFrame(title_frame)
-                            height_label:setText(thread.title)
-                            height_label:sizeToFit()
-
-                            username_height_label:setText(thread.author_username)
-                            username_height_label:sizeToFit()
-
-                            heights[row] = math.max(min_height, pad*2 + mid + height_label:frame().size.height + username_height_label:frame().size.height)
-                        end
-                        return heights[row]
-                    end
-                    if cb then
-                        cb()
-                    else
-                        tbl:refresh()
-                    end
-                    loading = false
-                    for i,v in ipairs(info.threads) do
-                        if v.author_avatar then
-                            loadicon(BASE_URL..'/res/dynamic/avatar/'..v.author_username..'-icon.png', function(icon)
-                                v.icon = icon
-                                local rows = objc.toobj{objc.NSIndexPath:indexPathForRow_inSection(i - 1, 0)}
-                                tbl.m:reloadRowsAtIndexPaths_withRowAnimation(rows, UITableViewRowAnimationNone)
-                            end)
-                        end
-                    end
-                    tbl.m:setHidden(false)
-                    load_fail:stop()
-                    load_fail.m:removeFromSuperview()
-                else
+                if not(info and status == 200) or (info and info.error) then
                     local msg
                     if info then
                         msg = info.error or 'Got HTTP error code: '..status
@@ -247,7 +165,119 @@ return function(forum, push, loadicon)
                         msg = status
                     end
                     load_fail:set_message(msg, m:view():frame().size)
+                    return
                 end
+
+                if not item then
+                    local negativeSpace = objc.UIBarButtonItem:alloc():initWithBarButtonSystemItem_target_action(UIBarButtonSystemItemFixedSpace, nil, nil)
+                    negativeSpace:setWidth(-16)
+
+                    local button = new_nav_button(0, 0, IMG('ios7-compose-outline.png'))
+                    item = objc.UIBarButtonItem:alloc():initWithCustomView(button.m)
+                    m:navigationItem():setRightBarButtonItems{negativeSpace, item}
+
+                    local function cb(post)
+                        list_threads()
+                    end
+
+                    function button.ontoggle()
+                        if LOGIN then
+                            require 'vc.post_thread'(m, forum, cb)
+                        else
+                            local nav = require 'vc.login'(function(login)
+                                if login then
+                                    LOG_IN(login)
+                                    require 'vc.post_thread'(m, forum, cb)
+                                end
+                            end)
+                            m:presentModalViewController_animated(nav, true)
+                        end
+                    end
+                end
+
+                tbl.items[1] = info.threads
+                function tbl.cell.onshow(_, m, section, row)
+                    if loading then return end
+                    local thread = tbl.items[section][row]
+                    --m:textLabel():setText(thread.title)
+                    --m:detailTextLabel():setText('By '..thread.author_username..', '..thread.num_replies..' replies')
+                    --m:imageView():setImage(thread.icon)
+
+                    local self = objc.getref(m)
+                    self.thread = thread
+
+                    self.title:setFrame(title_frame)
+                    self.title:setText(thread.title)
+                    self.title:sizeToFit()
+
+                    self.username:setFrame{{min_height, self.title:frame().origin.y + self.title:frame().size.height + mid},{0,0}}
+                    self.username:setText(thread.author_username)
+                    self.username:sizeToFit()
+
+                    self.avatar:setImage(thread.icon)
+
+                    local w = min_height - pad*2
+                    local h = min_height/2.5
+                    self.alienblue:setFrame{{m:frame().size.width - w - pad, (m:frame().size.height - h)/2}, {w, h}}
+
+                    self.replies:setText(thread.num_replies < 1000 and tostring(thread.num_replies) or string.format('%.1fk', math.floor(thread.num_replies/100)/10))
+                    self.replies:setFrame(self.alienblue:frame())
+
+                    self.time:setText(relative_time(os.time() - thread.last_post_date, true))
+                    self.time:sizeToFit()
+                    local frame = self.alienblue:frame()
+                    frame.origin.y = frame.origin.y - self.time:frame().size.height
+                    frame.size.height = self.time:frame().size.height
+                    self.time:setFrame(frame)
+
+                    local frame = self.avatar_button.m:frame()
+                    frame.size.height = m:frame().size.height
+                    self.avatar_button.m:setFrame(frame)
+                    self.avatar_button.parent = self
+
+                    local frame = self.mid_button.m:frame()
+                    frame.size.height = m:frame().size.height
+                    self.mid_button.m:setFrame(frame)
+                    self.mid_button.parent = self
+
+                    local frame = self.last_button.m:frame()
+                    frame.size.height = m:frame().size.height
+                    self.last_button.m:setFrame(frame)
+                    self.last_button.parent = self
+                end
+                function tbl.cell.getheight(_, section, row)
+                    local thread = tbl.items[section][row]
+                    if not heights[row] then
+                        local frame = height_label:frame()
+                        height_label:setFrame(title_frame)
+                        height_label:setText(thread.title)
+                        height_label:sizeToFit()
+
+                        username_height_label:setText(thread.author_username)
+                        username_height_label:sizeToFit()
+
+                        heights[row] = math.max(min_height, pad*2 + mid + height_label:frame().size.height + username_height_label:frame().size.height)
+                    end
+                    return heights[row]
+                end
+                if cb then
+                    cb()
+                else
+                    tbl:refresh()
+                end
+                loading = false
+                for i,v in ipairs(info.threads) do
+                    if v.author_avatar then
+                        loadicon(BASE_URL..'/res/dynamic/avatar/'..v.author_username..'-icon.png', function(icon)
+                            v.icon = icon
+                            local rows = objc.toobj{objc.NSIndexPath:indexPathForRow_inSection(i - 1, 0)}
+                            tbl.m:reloadRowsAtIndexPaths_withRowAnimation(rows, UITableViewRowAnimationNone)
+                        end)
+                    end
+                end
+                tbl.m:setHidden(false)
+                load_fail:stop()
+                load_fail.m:removeFromSuperview()
             end)
         end
         list_threads()

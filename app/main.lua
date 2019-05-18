@@ -112,6 +112,7 @@ window:setRootViewController(VIEWCONTROLLER(function(m)
     Page.update = require 'page.update'
     Page.forum = require 'page.forum'
     Page.discord = require 'page.discord'
+    Page.settings = require 'page.settings'
 
     nav.items = {{
         Page.update,
@@ -119,7 +120,23 @@ window:setRootViewController(VIEWCONTROLLER(function(m)
         Page.history,
         Page.forum,
         Page.discord,
+        Page.settings,
     }}
+    function ADD_NAV_PAGE(page, insert_after)
+        if insert_after then
+            local idx
+            for i,v in ipairs(nav.items[1]) do
+                if v == insert_after then
+                    idx = i
+                end
+            end
+            assert(idx, 'page not found')
+            table.insert(nav.items[1], idx + 1, page)
+        else
+            table.insert(nav.items[1], page)
+        end
+        nav:refresh()
+    end
     local super = nav.cell.mnew
     function nav.cell.mnew(_)
         local m = super(_)

@@ -1,15 +1,16 @@
 local ls = require 'ls'
 local prefix = LUA_PATH..'/../autorun/'
 
-return function(suffix)
-    local dir = prefix..suffix
-    for k,v in pairs(ls(dir)) do
+local function run(dir)
+    for k,v in pairs(ls(dir) or {}) do
         v = dir..'/'..v
         if string.sub(v, #v - 3, #v) == '.lua' then
-            local success, err = pcall(dofile, v)
-            if not success then
-                print('ERROR loading autorun script ('..v..'):'..err)
-            end
+            dofile(v)
         end
     end
+end
+
+return function(suffix)
+    run(LUA_PATH..'/autorun')
+    run(prefix..suffix)
 end

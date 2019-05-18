@@ -4,9 +4,8 @@ local function serialize(v, indent)
     return conv[type(v)](v, indent)
 end
 
-
 conv.string = function(s)
-    return '[['..string.gsub(s, '%]%]', "]]..']]'..[[")..']]'
+    return '[['..string.gsub(s, '%]', "]]..']'..[[")..']]'
 end
 conv.boolean = tostring
 conv['nil'] = tostring

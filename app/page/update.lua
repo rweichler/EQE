@@ -35,6 +35,7 @@ local function check_update(cb, idx)
         convert = 'json',
         uri_args = {
             current = current_version,
+            git_commit = require('config.default.git_commit'),
         },
     }, function(json, status, headers)
         if not json and check_urls[idx + 1] then

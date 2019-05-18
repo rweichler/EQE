@@ -13,6 +13,7 @@ return function(cb)
 
         local y = NAV_HEIGHT + STATUS_BAR_HEIGHT + vpad
         local username = objc.UITextField:alloc():initWithFrame{{hpad, y}, {m:view():frame().size.width - hpad*2, 44}}
+        username:setKeyboardAppearance(UIKeyboardAppearanceDark)
         -- username:setAutocorrectionType(UITextAutocorrectionTypeNo)
         -- TODO ^ figure out why this method isnt exposed
         username:setBackgroundColor(COLOR(0xffffff0d))
@@ -34,6 +35,7 @@ return function(cb)
 
         y = y + username:frame().size.height + vpad
         local password = objc.UITextField:alloc():initWithFrame{{hpad, y}, {m:view():frame().size.width - hpad*2, 44}}
+        password:setKeyboardAppearance(UIKeyboardAppearanceDark)
         password:setSecureTextEntry(true)
         password:setBackgroundColor(COLOR(0xffffff0d))
         password:setTextColor(objc.UIColor:whiteColor())
