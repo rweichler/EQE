@@ -1,14 +1,9 @@
-if jit.arch == 'arm64' then
-    jit.off()
-end
-
 package.path = LUA_PATH..'/?.lua;'..
                LUA_PATH..'/?/init.lua;'..
                LUA_PATH..'/../common/?.lua;'..
                LUA_PATH..'/../common/?/init.lua;'..
                package.path
-ffi = require 'ffi'
-C = ffi.C
+
 eqe = {}
 require 'util'
 require 'preset'

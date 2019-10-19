@@ -4,8 +4,6 @@ DIR *opendir(const char *);
 int closedir(DIR *dirp);
 ]]
 
-ls = require 'ls'
-
 _G.ANIMATE = function(arg1, arg2, arg3, arg4, arg5)
     local duration = 0.2
     local delay = 0

@@ -1,3 +1,9 @@
+if LUA_PATH == '/var/tweak/com.r333d.eqe/lua/core' then
+    -- TODO rewrite this to use the Lua C API
+    return function() return {} end
+end
+
+
 local ffi = require 'ffi'
 local C = ffi.C
 

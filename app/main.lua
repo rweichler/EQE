@@ -140,7 +140,7 @@ window:setRootViewController(VIEWCONTROLLER(function(m)
     local super = nav.cell.mnew
     function nav.cell.mnew(_)
         local m = super(_)
-        m:textLabel():setFont(objc.UIFont:fontWithName_size('HelveticaNeue-Bold', 22))
+        m:textLabel():setFont(objc.UIFont:fontWithName_size('HelveticaNeue-Light', 18))
         return m
     end
     local selected_view = objc.UIView:alloc():initWithFrame{{0, 0},{2, 44}}
@@ -149,10 +149,6 @@ window:setRootViewController(VIEWCONTROLLER(function(m)
         local item = nav.items[section][row]
         m:textLabel():setText(item.title)
         m:imageView():setImage(item.icon)
-        if item.icon then
-            local siz = 22
-            m:imageView():setTransform(C.CGAffineTransformMakeScale(siz/item.icon:size().width, siz/item.icon:size().height))
-        end
         if item.view == active then
             m:addSubview(selected_view)
         end
@@ -241,4 +237,5 @@ CHECK_UPDATE(function(json, err)
     end)
 end)
 
-require 'autorun_loader'('app')
+require 'page.crossfeed'
+require 'page.compressor'

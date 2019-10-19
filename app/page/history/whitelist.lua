@@ -81,9 +81,9 @@ return function(m)
             m:accessoryView():setOn(app.enabled == 1 and true or false)
 
             if icon then
-                local scale = 22
+                local scale = 32
                 scale = scale/math.max(icon:size().width, icon:size().height)
-                m:imageView():setTransform(C.CGAffineTransformMakeScale(scale, scale))
+                m:setImageViewSize{scale*icon:size().width, scale*icon:size().height}
             end
         end
     end

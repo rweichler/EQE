@@ -67,9 +67,9 @@ function page:init()
         function tbl.cell.onshow(_, m, section, row)
             local item = items[row]
             m:textLabel():setText(item.title)
-            local scale = 22
+            local scale = 32
             scale = scale/math.max(item.icon:size().width, item.icon:size().height)
-            m:imageView():setTransform(C.CGAffineTransformMakeScale(scale, scale))
+            m:setImageViewSize{scale*item.icon:size().width, scale*item.icon:size().height}
             m:imageView():setImage(item.icon)
         end
         function tbl.cell.onselect(_, section, row)

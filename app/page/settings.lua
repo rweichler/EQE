@@ -24,7 +24,7 @@ function page:init()
         local items = {
             {
                 title = 'Enable mediaserverd hook',
-                subtitle = 'When disabled, audio will not be processed. Basically the equivalent of disabling in iCleaner.',
+                subtitle = 'Handles processing of all audio.',
                 cb = function(enabled)
                     if enabled == nil then
                         return IPC('return GET_ENABLED()') == 'true'

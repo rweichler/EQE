@@ -1,5 +1,3 @@
-ls = require 'ls'
-
 function getcoefs(presetname)
     local filters
     if presetname then

@@ -33,6 +33,7 @@ function ui.cell:mnew()
     self.m = m
     objc.ref(m, self)
 
+    m:setImageViewSize{32, 32}
     m:textLabel():setTextColor(objc.UIColor:whiteColor())
     m:textLabel():setBackgroundColor(objc.UIColor:clearColor())
     m:detailTextLabel():setTextColor(objc.UIColor:whiteColor())
@@ -49,7 +50,7 @@ end
 function ui.cell:dealloc()
 end
 
-ui.cell.class = objc.GenerateClass('UITableViewCell')
+ui.cell.class = objc.GenerateClass('EQEEditCell')
 local class = ui.cell.class
 
 function class.dealloc(m)

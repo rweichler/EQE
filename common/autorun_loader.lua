@@ -1,8 +1,7 @@
-local ls = require 'ls'
 local prefix = LUA_PATH..'/../autorun/'
 
 local function run(dir)
-    for k,v in pairs(ls(dir) or {}) do
+    for k,v in pairs(io.ls(dir) or {}) do
         v = dir..'/'..v
         if string.sub(v, #v - 3, #v) == '.lua' then
             dofile(v)

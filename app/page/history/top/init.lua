@@ -43,7 +43,7 @@ return function(query, render)
             if icon then
                 local scale = 22
                 scale = scale/math.max(icon:size().width, icon:size().height)
-                m:imageView():setTransform(C.CGAffineTransformMakeScale(scale, scale))
+                m:setImageViewSize{scale*icon:size().width, scale*icon:size().height}
             end
         end
 

@@ -39,7 +39,8 @@ _G.filters = setmetatable({}, {
     end,
     __newindex = function()
         error('read only')
-    end
+    end,
+    __len = FILTER_COUNT,
 })
 
 function eqe:reset()

@@ -110,12 +110,7 @@ function page:init()
     end
 
     local cydia_notice_text = "If you want, you can just update through Cydia. Both methods are compatible with each other."
-    local version_info_text
-    if string.find(EQE_TWEAK_VERSION, '%~beta') then
-        version_info_text = 'Current version: '..EQE_TWEAK_VERSION..'\ngit commit: '..string.sub(require 'config.default.git_commit', 1, 6)..'\n\nIf you are reporting an issue, please specify the git commit as well.'
-    else
-        version_info_text = 'Current version: '..EQE_TWEAK_VERSION
-    end
+    local version_info_text = 'Current version: '..EQE_TWEAK_VERSION
 
     local cydia_notice = objc.UILabel:alloc():init()
     cydia_notice:setColor(COLOR(0xffffff5d))

@@ -5,7 +5,7 @@ function preset_file(name)
 end
 
 local function list(folder, ignore, should_return_table)
-    local t = ls(folder)
+    local t = io.ls(folder)
     local r = should_return_table and {} or ''
     for k,v in pairs(t) do
         if not(v == ignore) and string.sub(v, #v - 3, #v) == '.lua' then
@@ -70,8 +70,11 @@ end
 function eqe.load(name, target)
     target = target or eqe
     local f = loadfile(preset_file(name))
-    setfenv(f, {}) -- prevent "heres my preset" OSHIT PWNED situations
-    local t, attr = f()
+    local t, attr
+    do
+        local _ENV = {} -- prevent "heres my preset" OSHIT PWNED situations
+        t, attr = f()
+    end
     -- clear all bands
     if target == eqe then
         local to_insert = {}
