@@ -11,3 +11,5 @@ Yeah there's a lot of Lua code though. This repo is in `/var/tweak/com.r333d.eqe
 ```
 killall -9 eqed mediaserverd backboardd
 ```
+
+Errors are posted to the syslog with the prefix `EQE Log:`
