@@ -2,9 +2,9 @@
 
 https://eqe.fm/thread/4
 
-The EQE source is written in Lua and Objective-C. This repo contains the Lua code. The Objective-C code is closed source.
+EQE is written in Lua and Objective-C. This repo contains the Lua code. The Objective-C code is closed source.
 
-# How to make use of this code
+## Oh... ok
 
 This repo is exactly like what you would find in `/var/tweak/com.r333d.eqe/lua` on your iOS device. If you want to make changes, just edit the files there, and then run this command to load the changes:
 
