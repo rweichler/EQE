@@ -2,12 +2,7 @@
 
 https://eqe.fm/thread/4
 
-The EQE source is broken down into two parts:
-
-* Lua (~60% of the codebase)
-* Objective-C (~40% of the codebase)
-
-This repo contains all of the Lua code. The Objective-C code is closed source. (See reasoning below)
+The EQE source is written in Lua and Objective-C. This repo contains the Lua code. The Objective-C code is closed source.
 
 # How to make use of this code
 
@@ -61,22 +56,6 @@ High-level code for raw audio manipulation.
 
 Code for the frequency response curve in the equalizer UI. If you want to change its color or something this is where you'd do it. This is also where I hope for the equalizer UI to go once the LuaJIT bug is fixed (explained below).
 
-# Objective-C stuff that ISN'T in this repo
 
-* The equalizer UI itself, other than the frequency response curve (LuaJIT gets buggy when injected into SpringBoard, so for activator integration, I had to write this part in Objective-C)
-* MobileSubstrate hooking logic (needs to be fast)
-* Inter-process communication (multithreading is a nightmare in Lua)
-* Biquad filter logic (needs to be fast)
-* Activator / Flipswitch boilerplate (I'm pretty sure nobody cares about this code)
-* cycript-esque REPL (multithreading is a nightmare in Lua)
 
-**WHY THE OBJECTIVE-C PART IS CLOSED SOURCE**:
 
-1. I plan on continuing development far into the future. For me, disclosing **all** of the source has no pros and is nothing but potential cons. For all I know, some Chinese company might steal this and run off with it into the sunset, like the [Citra 3DS emulator](https://gbatemp.net/threads/citra-unofficial-chinese-builds-discussion.431974/).
-2. I want to discourage Objective-C contributions. Lua code is much easier to extend and maintain.
-
-If people start contributing to (or the community substantially benefits from) the Lua side of things, I will open source the Objective-C side as well. But for now, I don't want to risk getting burned. I hope you will understand.
-
-# Pull requests
-
-I don't know if I'll accept pull requests. This is mostly just a mirror. Better to ask / post code on [the Discord chat](https://discordapp.com/invite/RSJWAuX) or on [the forum](https://eqe.fm/forum) first.
