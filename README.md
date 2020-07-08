@@ -6,10 +6,9 @@ EQE is written in Lua and Objective-C. This repo contains the Lua code. The Obje
 
 ## Oh... ok
 
-Yeah there's a lot of Lua code though. This repo is in `/var/tweak/com.r333d.eqe/lua` on your iOS device. Edit the files there, hen SSH and run this command to reload:
+Yeah there's a lot of Lua code though. This repo is the same as `/var/tweak/com.r333d.eqe/lua` in iFile/Filza.
 
-```
-killall -9 eqed mediaserverd backboardd
+Run this command to reload: `killall -9 eqed mediaserverd backboardd`
 ```
 
 Errors are written to syslog with the prefix `EQE Log:`
