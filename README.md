@@ -2,4 +2,6 @@
 
 https://eqe.fm
 
-EQE is closed source. Some of the Lua code used to be open source, which is in this repo.
+The source to EQE is private.
+
+This repo is out of date. The Lua code used to public, which is here.
